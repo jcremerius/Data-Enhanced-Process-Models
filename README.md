@@ -1,6 +1,6 @@
 # Data-Enhanced-Process-Models
 
-This notebook creates the event log for the experiment in the paper "Data Enhanced Process Models in Process Mining"
+The jupyter notebook in this repository creates the event log for the experiment in the paper "Data Enhanced Process Models in Process Mining"
 It uses the MIMIC-IV (https://physionet.org/content/mimiciv/1.0/) database, stored in a Postgres database. 
 First, all cases related to acute Heart Failure are retrieved. Then, the hospital data for their respective hospital admission is fetched. 
 Additionally, X-ray data is retrieved from an external database called MIMIC-CXR (https://physionet.org/content/mimic-cxr/2.0.0/). 
