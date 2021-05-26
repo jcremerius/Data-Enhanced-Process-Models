@@ -4,7 +4,7 @@ The jupyter notebook in this repository creates the event log for the experiment
 It uses the MIMIC-IV (https://physionet.org/content/mimiciv/1.0/) database, stored in a Postgres database. 
 First, all cases related to acute Heart Failure are retrieved. Then, the hospital data for their respective hospital admission is fetched. 
 Additionally, X-ray data is retrieved from an external database called MIMIC-CXR (https://physionet.org/content/mimic-cxr/2.0.0/). 
-After that, relevant lab values and physician order entries, according to the clinical guideline, are used for the event log. 
+After that, relevant lab values and physician order entries, according to the clinical guideline (https://www.escardio.org/Guidelines/Clinical-Practice-Guidelines/Acute-and-Chronic-Heart-Failure), are used for the event log. 
 The databases can be accessed via physionet, which require CITI training for access (https://mimic.mit.edu/iv/). 
 
 1. Execute all function definitions at the bottom of the script. 
