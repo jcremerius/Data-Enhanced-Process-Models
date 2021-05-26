@@ -17,7 +17,7 @@ Link to the Inductive Visual Miner implementation: https://1drv.ms/u/s!AmDP37g19
 Link to the Setup of PROM in an IDE: https://svn.win.tue.nl/trac/prom/wiki/Contribute
 
 
-Inductive Visual Miner Implementation:
+
 
 The main contribution of this paper can be found in the following file: InductiveVisualMiner/src/org/processmining/plugins/inductiveVisualMiner/visualisation/ProcessTreeVisualisation.java in the function convertActivity.
 There, the event attribute aggregations are calculated and attached to the process activity. The HashMap attributesToDisplay includes all activities with their event attribute aggregation. In future work, this array is supposed to be set by the GUI to enable a flexible addition/removal of event attribute aggregations. So far, this has to be set in the code.
