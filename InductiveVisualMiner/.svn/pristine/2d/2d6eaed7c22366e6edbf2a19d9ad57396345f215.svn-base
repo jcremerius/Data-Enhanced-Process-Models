@@ -1,0 +1,208 @@
+package org.processmining.plugins.inductiveVisualMiner.alignment;
+
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
+
+import java.util.Map;
+import java.util.Set;
+
+import org.processmining.plugins.InductiveMiner.Triple;
+import org.processmining.plugins.InductiveMiner.efficienttree.UnknownTreeNodeException;
+import org.processmining.plugins.InductiveMiner.mining.interleaved.Interleaved;
+import org.processmining.processtree.Block;
+import org.processmining.processtree.Block.And;
+import org.processmining.processtree.Block.Def;
+import org.processmining.processtree.Block.DefLoop;
+import org.processmining.processtree.Block.Or;
+import org.processmining.processtree.Block.Seq;
+import org.processmining.processtree.Block.Xor;
+import org.processmining.processtree.Block.XorLoop;
+import org.processmining.processtree.Node;
+import org.processmining.processtree.ProcessTree;
+import org.processmining.processtree.Task.Automatic;
+import org.processmining.processtree.Task.Manual;
+import org.processmining.processtree.conversion.ProcessTree2Petrinet.UnfoldedNode;
+import org.processmining.processtree.impl.AbstractBlock;
+import org.processmining.processtree.impl.ProcessTreeImpl;
+
+public class ExpandProcessTree {
+	public static final String enqueue = "enqueue";
+	public static final String start = "start";
+	public static final String complete = "complete";
+
+	/**
+	 * Expands a collapsed process tree, i.e. transforms all leaves a into
+	 * seq(xor(tau, a+enqueue), xor(tau, a+start), a+complete).
+	 * 
+	 * @param tree
+	 * @return
+	 * @throws UnknownTreeNodeException 
+	 */
+	public static Triple<ProcessTree, Map<UnfoldedNode, UnfoldedNode>, Set<UnfoldedNode>> expand(ProcessTree tree) throws UnknownTreeNodeException {
+		ProcessTree newTree = new ProcessTreeImpl();
+		Map<UnfoldedNode, UnfoldedNode> mapping = new THashMap<>();
+		Set<UnfoldedNode> enqueueTaus = new THashSet<>();
+		newTree.setRoot(expand(new UnfoldedNode(tree.getRoot()), newTree, mapping, enqueueTaus, null));
+		return Triple.of(newTree, mapping, enqueueTaus);
+	}
+
+	private static Node expand(UnfoldedNode unode, ProcessTree newTree, Map<UnfoldedNode, UnfoldedNode> mapping,
+			Set<UnfoldedNode> enqueueTaus, UnfoldedNode newParent) throws UnknownTreeNodeException {
+		if (unode.getNode() instanceof Block) {
+			//copy blocks
+			Block newNode;
+			if (unode.getNode() instanceof Seq) {
+				newNode = new AbstractBlock.Seq(unode.getNode().getName());
+			} else if (unode.getNode() instanceof Interleaved) {
+
+				//before: int( A, B, C)
+				//after: xor(seq(A, int(B, C)),  seq(B, int(A, C)), seq(B, int(C, A)))
+
+				newNode = new AbstractBlock.Xor("");
+				newTree.addNode(newNode);
+				
+				UnfoldedNode childParent;
+				if (newParent == null) {
+					childParent = new UnfoldedNode(newNode);
+				} else {
+					childParent = newParent.unfoldChild(newNode);
+				}
+
+				for (Node child : ((Block) unode.getNode()).getChildren()) {
+					Seq seq = new AbstractBlock.Seq("");
+					UnfoldedNode uSeq = childParent.unfoldChild(seq);
+					newTree.addNode(seq);
+					newNode.addChild(seq);
+					
+					seq.addChild(expand(unode.unfoldChild(child), newTree, mapping, enqueueTaus, uSeq));
+
+					for (Node child2 : ((Block) unode.getNode()).getChildren()) {
+						if (!child.equals(child2)) {
+							seq.addChild(expand(unode.unfoldChild(child2), newTree, mapping, enqueueTaus, uSeq));
+						}
+					}
+					
+					mapping.put(uSeq, unode);
+				}
+				
+				mapping.put(childParent, unode);
+
+				return newNode;
+			} else if (unode.getNode() instanceof And) {
+				newNode = new AbstractBlock.And(unode.getNode().getName());
+			} else if (unode.getNode() instanceof XorLoop) {
+				newNode = new AbstractBlock.XorLoop(unode.getNode().getName());
+			} else if (unode.getNode() instanceof DefLoop) {
+				newNode = new AbstractBlock.DefLoop(unode.getNode().getName());
+			} else if (unode.getNode() instanceof Xor || unode.getNode() instanceof Def) {
+				newNode = new AbstractBlock.Xor(unode.getNode().getName());
+			} else if (unode.getNode() instanceof Def) {
+				newNode = new AbstractBlock.Def(unode.getNode().getName());
+			} else if (unode.getNode() instanceof Or) {
+				newNode = new AbstractBlock.Or(unode.getNode().getName());
+			} else {
+				throw new UnknownTreeNodeException();
+			}
+			newNode.setProcessTree(newTree);
+			newTree.addNode(newNode);
+
+			UnfoldedNode childParent;
+			if (newParent == null) {
+				childParent = new UnfoldedNode(newNode);
+			} else {
+				childParent = newParent.unfoldChild(newNode);
+			}
+
+			//process children
+			for (Node child : unode.getBlock().getChildren()) {
+				newNode.addChild(expand(unode.unfoldChild(child), newTree, mapping, enqueueTaus, childParent));
+			}
+
+			mapping.put(childParent, unode);
+
+			return newNode;
+		} else if (unode.getNode() instanceof Automatic) {
+			//copy tau
+			Node newNode = new org.processmining.processtree.impl.AbstractTask.Automatic("tau");
+			newNode.setProcessTree(newTree);
+			newTree.addNode(newNode);
+
+			UnfoldedNode childParent;
+			if (newParent == null) {
+				childParent = new UnfoldedNode(newNode);
+			} else {
+				childParent = newParent.unfoldChild(newNode);
+			}
+			mapping.put(childParent, unode);
+
+			return newNode;
+		} else if (unode.getNode() instanceof Manual) {
+			//transform activity into seq(xor(start, tau), complete)
+
+			Seq seq = new org.processmining.processtree.impl.AbstractBlock.Seq("performance seq");
+			seq.setProcessTree(newTree);
+			newTree.addNode(seq);
+			UnfoldedNode childParent;
+			if (newParent == null) {
+				childParent = new UnfoldedNode(seq);
+			} else {
+				childParent = newParent.unfoldChild(seq);
+			}
+			mapping.put(childParent, unode);
+
+			{
+				Xor xor = new org.processmining.processtree.impl.AbstractBlock.Xor("performance xor enqueue");
+				xor.setProcessTree(newTree);
+				newTree.addNode(xor);
+				seq.addChild(xor);
+				mapping.put(childParent.unfoldChild(xor), unode);
+
+				Automatic tau = new org.processmining.processtree.impl.AbstractTask.Automatic("tau");
+				tau.setProcessTree(newTree);
+				newTree.addNode(tau);
+				xor.addChild(tau);
+				mapping.put(childParent.unfoldChild(xor).unfoldChild(tau), unode);
+				enqueueTaus.add(childParent.unfoldChild(xor).unfoldChild(tau));
+
+				Manual aStart = new org.processmining.processtree.impl.AbstractTask.Manual(unode.getNode().getName()
+						+ "+" + enqueue);
+				aStart.setProcessTree(newTree);
+				newTree.addNode(aStart);
+				xor.addChild(aStart);
+				mapping.put(childParent.unfoldChild(xor).unfoldChild(aStart), unode);
+			}
+
+			{
+				Xor xor = new org.processmining.processtree.impl.AbstractBlock.Xor("performance xor start");
+				xor.setProcessTree(newTree);
+				newTree.addNode(xor);
+				seq.addChild(xor);
+				mapping.put(childParent.unfoldChild(xor), unode);
+
+				Automatic tau = new org.processmining.processtree.impl.AbstractTask.Automatic("tau");
+				tau.setProcessTree(newTree);
+				newTree.addNode(tau);
+				xor.addChild(tau);
+				mapping.put(childParent.unfoldChild(xor).unfoldChild(tau), unode);
+
+				Manual aStart = new org.processmining.processtree.impl.AbstractTask.Manual(unode.getNode().getName()
+						+ "+" + start);
+				aStart.setProcessTree(newTree);
+				newTree.addNode(aStart);
+				xor.addChild(aStart);
+				mapping.put(childParent.unfoldChild(xor).unfoldChild(aStart), unode);
+			}
+
+			Manual aComplete = new org.processmining.processtree.impl.AbstractTask.Manual(unode.getNode().getName()
+					+ "+" + complete);
+			aComplete.setProcessTree(newTree);
+			newTree.addNode(aComplete);
+			seq.addChild(aComplete);
+			mapping.put(childParent.unfoldChild(aComplete), unode);
+
+			return seq;
+		} else {
+			throw new RuntimeException("construct not implemented");
+		}
+	}
+}

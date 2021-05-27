@@ -1,0 +1,45 @@
+package org.processmining.plugins.inductiveVisualMiner.ivmlog;
+
+import org.deckfour.xes.model.XAttributeMap;
+import org.processmining.plugins.inductiveVisualMiner.helperClasses.IteratorWithPosition;
+
+/**
+ * Defines the basic methods to find out whether a trace is filtered out.
+ * 
+ * @author sleemans
+ *
+ */
+public interface IvMLogFiltered extends Cloneable {
+	public boolean isSomethingFiltered();
+
+	public boolean isFilteredOut(int traceIndex);
+
+	/**
+	 * Inverts the log. Cheap operation.
+	 * 
+	 * @return
+	 */
+	public void invert();
+
+	/**
+	 * 
+	 * @return an iterator over all traces that are not filtered out. This
+	 *         iterator must support the remove() action, which filters the
+	 *         current trace out.
+	 */
+	public IteratorWithPosition<IvMTrace> iterator();
+
+	/**
+	 * 
+	 * @return an iterator over all traces, regardless of filtering. This
+	 *         iterator must support the remove() action, which filters the
+	 *         current trace out.
+	 */
+	public IteratorWithPosition<IvMTrace> iteratorUnfiltered();
+
+	public boolean equals(IvMLogFiltered otherLog);
+
+	public IvMLogFilteredImpl clone() throws CloneNotSupportedException;
+
+	public XAttributeMap getAttributes();
+}

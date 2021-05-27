@@ -1,0 +1,12 @@
+department,Cardiac ICU,Post-ICU Cardiology,Discharged,Pre-ICU Medicine,Medical ICU,Post-ICU Medicine,Surgical ICU,Pre-ICU Cardiology,Post-ICU Surgery,Pre-ICU Surgery,Emergency Department
+Cardiac ICU,#08306b,#1d6cb1,#3a8ac2,#105ba4,#08306b,#1d6cb1,#08306b,#105ba4,#2c7cba,#2575b7,#f7fbff
+Post-ICU Cardiology,#1d6cb1,#08306b,#0d57a1,#08458a,#1d6cb1,#08306b,#1d6cb1,#08458a,#08468b,#1764ab,#f7fbff
+Discharged,#3a8ac2,#0d57a1,#08306b,#1a68ae,#3a8ac2,#0d57a1,#3a8ac2,#1a68ae,#0d57a1,#084d96,#f7fbff
+Pre-ICU Medicine,#105ba4,#08458a,#1a68ae,#08306b,#105ba4,#08458a,#105ba4,#08306b,#0e58a2,#084f99,#f7fbff
+Medical ICU,#08306b,#1d6cb1,#3a8ac2,#105ba4,#08306b,#1d6cb1,#08306b,#105ba4,#2c7cba,#2575b7,#f7fbff
+Post-ICU Medicine,#1d6cb1,#08306b,#0d57a1,#08458a,#1d6cb1,#08306b,#1d6cb1,#08458a,#08468b,#1764ab,#f7fbff
+Surgical ICU,#08306b,#1d6cb1,#3a8ac2,#105ba4,#08306b,#1d6cb1,#08306b,#105ba4,#2c7cba,#2575b7,#f7fbff
+Pre-ICU Cardiology,#105ba4,#08458a,#1a68ae,#08306b,#105ba4,#08458a,#105ba4,#08306b,#0e58a2,#084f99,#f7fbff
+Post-ICU Surgery,#2c7cba,#08468b,#0d57a1,#0e58a2,#2c7cba,#08468b,#2c7cba,#0e58a2,#08306b,#1764ab,#f7fbff
+Pre-ICU Surgery,#2575b7,#1764ab,#084d96,#084f99,#2575b7,#1764ab,#2575b7,#084f99,#1764ab,#08306b,#f7fbff
+Emergency Department,#f7fbff,#f7fbff,#f7fbff,#f7fbff,#f7fbff,#f7fbff,#f7fbff,#f7fbff,#f7fbff,#f7fbff,#08306b
